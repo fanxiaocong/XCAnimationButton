@@ -220,7 +220,8 @@
 				TargetAttributes = {
 					1E088D551E6F962100FE43FF = {
 						CreatedOnToolsVersion = 8.1;
-						ProvisioningStyle = Automatic;
+						DevelopmentTeam = 37L38B7YGT;
+						ProvisioningStyle = Manual;
 					};
 					1E088D6E1E6F962100FE43FF = {
 						CreatedOnToolsVersion = 8.1;
@@ -436,10 +437,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = 37L38B7YGT;
 				INFOPLIST_FILE = XCAnimationButtonExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ylh.XCAnimationButtonExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "fbaf2bec-d893-41e9-8b4b-0601998203a5";
+				PROVISIONING_PROFILE_SPECIFIER = NavHaiHealthDevelopment;
 			};
 			name = Debug;
 		};
@@ -447,10 +452,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = 37L38B7YGT;
 				INFOPLIST_FILE = XCAnimationButtonExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ylh.XCAnimationButtonExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "fbaf2bec-d893-41e9-8b4b-0601998203a5";
+				PROVISIONING_PROFILE_SPECIFIER = NavHaiHealthDevelopment;
 			};
 			name = Release;
 		};

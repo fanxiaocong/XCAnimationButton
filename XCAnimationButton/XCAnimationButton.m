@@ -57,6 +57,7 @@
 @property (nonatomic, strong) CAShapeLayer        * imageShape;
 @property (nonatomic, strong) CAShapeLayer        * circleShape;
 @property (nonatomic, strong) CAShapeLayer        * circleMask;
+@property (strong, nonatomic) CAShapeLayer        * shineCircleLayer;
 @property (nonatomic, strong) NSMutableArray      * lines;
 @property (nonatomic, strong) CAKeyframeAnimation * circleTransform;
 @property (nonatomic, strong) CAKeyframeAnimation * circleMaskTransform;
@@ -122,10 +123,8 @@
 - (void)createLayersWithImage:(UIImage *)image {
     self.layer.sublayers = nil;
     
-    CGRect imageFrame = CGRectMake(self.frame.size.width / 2 - self.frame.size.width / 4,
-                                   self.frame.size.height / 2 - self.frame.size.height / 4,
-                                   self.frame.size.width / 2,
-                                   self.frame.size.height / 2);
+    CGRect imageFrame = self.bounds;
+    
     CGPoint imgCenterPoint = CGPointMake(CGRectGetMidX(imageFrame), CGRectGetMidY(imageFrame));
     CGRect lineFrame = CGRectMake(imageFrame.origin.x - imageFrame.size.width / 4,
                                   imageFrame.origin.y - imageFrame.size.height / 4 ,
@@ -182,7 +181,7 @@
         line.strokeEnd = 0.f;
         line.opacity = 0.f;
         line.transform = CATransform3DMakeRotation(M_PI / 7 * (i * 2 + 1), 0.0, 0.0, 1.0);
-        [self.layer addSublayer: line];
+        [self.layer addSublayer:line];
         [self.lines addObject:line];
         CGPathRelease(path);
     }
@@ -205,6 +204,17 @@
     self.imageShape.mask.contents = (id)[image CGImage];
     self.imageShape.mask.bounds = imageFrame;
     self.imageShape.mask.position = imgCenterPoint;
+    
+    
+    //===============
+    // shine layer
+    //===============
+    self.shineCircleLayer = ({
+        CAShapeLayer *shineCircleLayer = [CAShapeLayer layer];
+        shineCircleLayer.frame = self.bounds;
+        shineCircleLayer;
+    });
+    [self.layer addSublayer:self.shineCircleLayer];
     
     //==============================
     // circle transform animation
@@ -358,7 +368,6 @@
                                      ];
 }
 
-
 - (void)addTargets {
     //===============
     // add target
@@ -369,6 +378,99 @@
     [self addTarget:self action:@selector(touchDragEnter:) forControlEvents:UIControlEventTouchDragEnter];
     [self addTarget:self action:@selector(touchCancel:) forControlEvents:UIControlEventTouchCancel];
 }
+
+#pragma mark - 🔒 👀 Privite Method 👀
+
+- (CGPoint)getShineCenter:(CGFloat)angle radius:(CGFloat)radius
+{
+    CGFloat cenx = CGRectGetMidX(self.bounds);
+    CGFloat ceny = CGRectGetMidY(self.bounds);
+    int multiple = 0;
+    if (angle >= 0 && angle <= 90 * M_PI/180) {
+        multiple = 1;
+    } else if (angle <= M_PI && angle > 90 * M_PI/180) {
+        multiple = 2;
+    } else if (angle > M_PI && angle <= 270 * M_PI/180) {
+        multiple = 3;
+    } else {
+        multiple = 4;
+    }
+    
+    CGFloat resultAngel = multiple * (90 * M_PI/180) - angle;
+    CGFloat a = sin(resultAngel) * radius;
+    CGFloat b = cos(resultAngel) * radius;
+    if (multiple == 1) {
+        return CGPointMake(cenx+b, ceny-a);
+    } else if (multiple == 2) {
+        return CGPointMake(cenx+a, ceny+b);
+    } else if (multiple == 3) {
+        return CGPointMake(cenx-b, ceny+a);
+    } else {
+        return CGPointMake(cenx-a, ceny-b);
+    }
+}
+
+- (void)startShineCircleAnimation:(NSTimeInterval)duration
+{
+    // subShineCircleLayers
+    CGFloat angle = M_PI * 2 / 7;
+    CGFloat startAngle = M_PI * 2.0 - (angle / 7);
+    CGFloat radius = self.frame.size.width * 0.5 * 1.5;
+    CGFloat animR = self.frame.size.width * 0.5 * 1.5 * 1.4;
+    
+    for (int i = 0; i < 7; i++)
+    {
+        CAShapeLayer *bigShine = [CAShapeLayer new];
+        CGFloat  bigWidth = self.frame.size.width * 0.15;
+        CGPoint center = [self getShineCenter:startAngle + angle*i radius:radius];
+        UIBezierPath *path = [UIBezierPath bezierPathWithArcCenter:center radius:bigWidth startAngle: 0 endAngle:M_PI * 2 clockwise:false];
+        bigShine.path = path.CGPath;
+        bigShine.fillColor = self.favoredColor.CGColor;
+        [self.shineCircleLayer addSublayer:bigShine];
+        
+        CGFloat smallShineOffsetAngle = 20;
+        CAShapeLayer *smallShine = [CAShapeLayer new];
+        CGFloat smallWidth = bigWidth * 0.66;
+        CGPoint smallCenter = [self getShineCenter:startAngle + angle * i -smallShineOffsetAngle * M_PI/180 radius:radius-bigWidth];
+        UIBezierPath *smallPath = [UIBezierPath bezierPathWithArcCenter:smallCenter radius:smallWidth startAngle:0 endAngle:M_PI * 2.0 clockwise:false];
+        smallShine.path = smallPath.CGPath;
+        smallShine.fillColor = self.defaultColor.CGColor;
+        [self.shineCircleLayer addSublayer:smallShine];
+        
+        /// 动画
+        CABasicAnimation *bigAnim = [self getAngleAnim:bigShine angle:startAngle + angle * i radius:animR];
+        CGFloat radiusSub = self.frame.size.width * 0.15 * 0.66;
+        CABasicAnimation *smallAnim = [self getAngleAnim:smallShine angle:startAngle + angle * i - 20 * M_PI / 180  radius: animR-radiusSub];
+        
+        [bigShine addAnimation:bigAnim forKey:@"path"];
+        [smallShine addAnimation:smallAnim forKey:@"path"];
+    }
+    
+    CABasicAnimation *angleAnim = [CABasicAnimation animationWithKeyPath: @"transform.rotation"];
+    angleAnim.duration = duration  * 0.87;
+    angleAnim.timingFunction =  [CAMediaTimingFunction functionWithName: kCAMediaTimingFunctionLinear];
+    angleAnim.fromValue = @0;
+    angleAnim.toValue = @(20 * M_PI/180);
+    [self.shineCircleLayer addAnimation:angleAnim forKey:@"rotate"];
+}
+
+- (CABasicAnimation *)getAngleAnim:(CAShapeLayer *)shine
+                             angle:(CGFloat)angle
+                            radius:(CGFloat)radius
+{
+    CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:@"path"];
+    anim.duration = self.duration * 0.87;
+    anim.fromValue = (__bridge id _Nullable)(shine.path);
+    CGPoint center = [self getShineCenter:angle radius:radius];
+    UIBezierPath *path = [UIBezierPath bezierPathWithArcCenter:center radius:0.1 startAngle:0 endAngle:M_PI * 2.0  clockwise:false];
+    anim.toValue = (__bridge id _Nullable)(path.CGPath);
+    anim.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
+    anim.removedOnCompletion = false;
+    anim.fillMode = kCAFillModeForwards;
+    return anim;
+}
+
+#pragma mark - 🎬 👀 Action Method 👀
 
 - (void)touchDown:(UIButton *)sender {
 
@@ -431,6 +533,11 @@
     }
     
     [CATransaction commit];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * self.duration * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        // 开始动画
+        [self startShineCircleAnimation:0.9 * self.duration];
+    });
 }
 
 - (void)deselect {
@@ -440,13 +547,10 @@
     [self.circleShape removeAllAnimations];
     [self.circleMask removeAllAnimations];
     [self.imageShape removeAllAnimations];
-    [self.lines[0] removeAllAnimations];
-    [self.lines[1] removeAllAnimations];
-    [self.lines[2] removeAllAnimations];
-    [self.lines[3] removeAllAnimations];
-    [self.lines[4] removeAllAnimations];
-    [self.lines[5] removeAllAnimations];
-    [self.lines[6] removeAllAnimations];
+    [self.lines makeObjectsPerformSelector:@selector(removeAllAnimations)];
+    [self.shineCircleLayer.sublayers makeObjectsPerformSelector:@selector(removeAllAnimations)];
+    [self.shineCircleLayer.sublayers makeObjectsPerformSelector:@selector(removeFromSuperlayer)];
+    [self.shineCircleLayer removeAllAnimations];
     
     CGFloat scaleDuration = .8f;
     self.userInteractionEnabled = NO;
@@ -466,6 +570,7 @@
 }
 
 #pragma mark - Getter && Setter
+
 - (void)setImage:(UIImage *)image {
     _image = image;
     [self createLayersWithImage:_image];
@@ -533,10 +638,4 @@
 }
 
 @end
-
-
-
-
-
-
 

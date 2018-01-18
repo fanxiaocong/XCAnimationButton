@@ -37,7 +37,6 @@
         CGFloat buttonX = i * buttonWH;
         
         XCAnimationButton *button = [[XCAnimationButton alloc] initWithFrame:CGRectMake(buttonX, buttonY, buttonWH, buttonWH)];
-        
         button.image = [UIImage imageNamed:images[i]];
 
         [button addTarget:self action:@selector(didClickButton:) forControlEvents:UIControlEventTouchUpInside];
@@ -57,30 +56,5 @@
 }
 
 @end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "XCAnimationButton"
-  s.version      = "1.0.0"
+  s.version      = "1.0.1"
   s.summary      = "XCAnimationButton"
 
   s.description  = "XCAnimationButton自定义带动画按钮"
