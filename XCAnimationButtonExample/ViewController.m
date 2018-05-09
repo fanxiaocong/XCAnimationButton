@@ -30,14 +30,26 @@
     NSArray *images = @[@"heart", @"like", @"smile", @"star"];
     
     CGFloat buttonWH = 60;
-    CGFloat buttonY  = 200;
+    CGFloat screenW = [UIScreen mainScreen].bounds.size.width;
     
     for (NSInteger i = 0; i < images.count; i ++)
     {
-        CGFloat buttonX = i * buttonWH;
+        CGFloat buttonX = screenW * 0.5 * (i % 2) + (screenW * 0.5 - buttonWH) * 0.5 ;
+        CGFloat buttonY = 200 + (buttonWH + 100) * (i / 2);
         
         XCAnimationButton *button = [[XCAnimationButton alloc] initWithFrame:CGRectMake(buttonX, buttonY, buttonWH, buttonWH)];
+        /// 背景图片
         button.image = [UIImage imageNamed:images[i]];
+        /// 最终填充的按钮的颜色
+        button.favoredColor = [UIColor redColor];
+        /// 默认的背景颜色
+        button.defaultColor = [UIColor lightGrayColor];
+        /// 渐变环的颜色
+        button.circleColor  = [UIColor orangeColor];
+        /// 线的颜色
+        button.lineColor    = [UIColor blueColor];
+        /// 状态改变一次的时间
+        button.duration     = 1.f;
 
         [button addTarget:self action:@selector(didClickButton:) forControlEvents:UIControlEventTouchUpInside];
         
